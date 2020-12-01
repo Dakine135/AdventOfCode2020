@@ -1,0 +1,26 @@
+{
+  "name": "adventofcode2020",
+  "version": "1.0.0",
+  "description": "My solutions to Advent of Code 2020",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dakine135/AdventOfCode2020.git"
+  },
+  "keywords": [
+    "Advent",
+    "of",
+    "Code",
+    "2020",
+    "Node"
+  ],
+  "author": "Dustin Welborn",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Dakine135/AdventOfCode2020/issues"
+  },
+  "homepage": "https://github.com/Dakine135/AdventOfCode2020#readme"
+}
