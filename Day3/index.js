@@ -77,7 +77,7 @@ What do you get if you multiply together the number of trees encountered on each
 
 Answers:
 Part1: 244
-Part2: 303
+Part2: 9406609920
 
 */
 
