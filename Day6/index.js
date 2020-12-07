@@ -43,8 +43,48 @@ In this example, the sum of these counts is 3 + 3 + 3 + 1 + 1 = 11.
 
 For each group, count the number of questions to which anyone answered "yes". What is the sum of those counts?
 
+Your puzzle answer was 6457.
+
+The first half of this puzzle is complete! It provides one gold star: *
+
+--- Part Two ---
+
+As you finish the last group's customs declaration, you notice that you misread one word in the instructions:
+
+You don't need to identify the questions to which anyone answered "yes"; you need to identify the questions to which everyone answered "yes"!
+
+Using the same example as above:
+
+abc
+
+a
+b
+c
+
+ab
+ac
+
+a
+a
+a
+a
+
+b
+
+This list represents answers from five groups:
+
+    In the first group, everyone (all 1 person) answered "yes" to 3 questions: a, b, and c.
+    In the second group, there is no question to which everyone answered "yes".
+    In the third group, everyone answered yes to only 1 question, a. Since some people did not answer "yes" to b or c, they don't count.
+    In the fourth group, everyone answered yes to only 1 question, a.
+    In the fifth group, everyone (all 1 person) answered "yes" to 1 question, b.
+
+In this example, the sum of these counts is 3 + 0 + 1 + 1 + 1 = 6.
+
+For each group, count the number of questions to which everyone answered "yes". What is the sum of those counts?
+
 Answers:
-Part1: 
+Part1: 6457
 Part2: 
 
 */
@@ -55,7 +95,7 @@ const fs = require("fs");
 
 const baseUrl = "adventofcode.com";
 const year = 2020;
-const day = 5;
+const day = 6;
 const thisPuzzleUrlInput = `/${year}/day/${day}/input`;
 
 const inputFilePath = "./input.json";
@@ -84,12 +124,18 @@ if (!fs.existsSync(inputFilePath)) {
     });
 
     res.on("end", () => {
-      input = input.split("\n");
-      input.forEach((row) => {});
-      // console.log("Passports:", passports);
-      let dataToWrite = JSON.stringify(passports);
+      input = input.split("\n\n");
+      input = input.filter((text) => {
+        return text && text.length > 0 && text != "" && text != " ";
+      });
+      input = input.map((group) => {
+        return group.split("\n").filter((text) => {
+          return text && text.length > 0 && text != "" && text != " ";
+        });
+      });
+      let dataToWrite = JSON.stringify(input);
       fs.writeFileSync(inputFilePath, dataToWrite);
-      // main(input);
+      main(input);
     });
   });
 
@@ -115,9 +161,32 @@ function main(input) {
   // console.log("input", input);
   let startTime = getNanoSecTime();
 
-  input.forEach((item) => {});
+  let countPart1 = 0;
+  let countPart2 = 0;
+  input.forEach((groupRaw) => {
+    let uniqueAnswers = {};
+    groupRaw.forEach((person) => {
+      person.split("").forEach((char) => {
+        if (!uniqueAnswers[char]) uniqueAnswers[char] = 1;
+        else uniqueAnswers[char] += 1;
+      });
+    });
+    // console.log(uniqueAnswers);
+    let keys = Object.keys(uniqueAnswers);
+    countPart1 += keys.length;
+    let countWhichAllAnsweredYes = 0;
+    let numberOfPeopleInGroup = groupRaw.length;
+    keys.forEach((answer) => {
+      if (uniqueAnswers[answer] == numberOfPeopleInGroup)
+        countWhichAllAnsweredYes += 1;
+    });
+    countPart2 += countWhichAllAnsweredYes;
+  });
 
   let endTime = getNanoSecTime();
   let timeElapsed = (endTime - startTime) * 0.000001;
   console.log("timeElapsed:", timeElapsed);
+
+  console.log("Sum of counts Part 1:", countPart1);
+  console.log("Sum of counts Part 2:", countPart2);
 }
