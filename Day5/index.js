@@ -41,9 +41,22 @@ Here are some other boarding passes:
 
 As a sanity check, look through your list of boarding passes. What is the highest seat ID on a boarding pass?
 
+Your puzzle answer was 842.
+
+The first half of this puzzle is complete! It provides one gold star: *
+--- Part Two ---
+
+Ding! The "fasten seat belt" signs have turned on. Time to find your seat.
+
+It's a completely full flight, so your seat should be the only missing boarding pass in your list. However, there's a catch: some of the seats at the very front and back of the plane don't exist on this aircraft, so they'll be missing from your list as well.
+
+Your seat wasn't at the very front or back, though; the seats with IDs +1 and -1 from yours will be in your list.
+
+What is the ID of your seat?
+
 Answers:
-Part1: 
-Part2: 
+Part1: 842
+Part2: 617
 
 */
 
@@ -83,11 +96,13 @@ if (!fs.existsSync(inputFilePath)) {
 
     res.on("end", () => {
       input = input.split("\n");
-      input.forEach((row) => {});
-      // console.log("Passports:", passports);
-      let dataToWrite = JSON.stringify(passports);
+      input = input.filter((text) => {
+        return text && text.length > 0 && text != "" && text != " ";
+      });
+      // input.forEach((row) => {});
+      let dataToWrite = JSON.stringify(input);
       fs.writeFileSync(inputFilePath, dataToWrite);
-      // main(input);
+      main(input);
     });
   });
 
@@ -109,13 +124,96 @@ function getNanoSecTime() {
   return hrTime[0] * 1000000000 + hrTime[1];
 }
 
+/*
+  binary space partitioning
+  BFFFBBFRRR: row 70, column 7, seat ID 567.
+  FFFBBBFRRR: row 14, column 7, seat ID 119.
+  BBFFBBFRLL: row 102, column 4, seat ID 820
+*/
+function findSeat(seatCode, plane) {
+  // console.log("SEAT CODE:", seatCode);
+  let columnMax = plane.columns - 1;
+  let columnMin = 0;
+  let rowMax = plane.rows - 1;
+  let rowMin = 0;
+  //TODO Diff is one off
+  let columnDiff = columnMax - columnMin + 1;
+  let rowDiff = rowMax - rowMin + 1;
+  // console.log("Before ROW:", rowMin, rowMax, rowDiff);
+  // console.log("Before Column:", columnMin, columnMax, columnDiff);
+  seatCode.split("").forEach((char, index) => {
+    // console.log(
+    //   "Character:",
+    //   seatCode.substring(0, index),
+    //   char,
+    //   seatCode.substring(index + 1)
+    // );
+
+    switch (char) {
+      case "F":
+        rowMax = rowMax - Math.ceil(rowDiff / 2);
+        rowDiff = rowMax - rowMin;
+        // console.log("After ROW:", rowMin, rowMax, rowDiff);
+        break;
+      case "B":
+        rowMin = rowMin + Math.ceil(rowDiff / 2);
+        rowDiff = rowMax - rowMin;
+        // console.log("After ROW:", rowMin, rowMax, rowDiff);
+        break;
+      case "L":
+        columnMax = columnMax - Math.ceil(columnDiff / 2);
+        columnDiff = columnMax - columnMin;
+        // console.log("After Column:", columnMin, columnMax, columnDiff);
+        break;
+      case "R":
+        columnMin = columnMin + Math.ceil(columnDiff / 2);
+        columnDiff = columnMax - columnMin;
+        // console.log("After Column:", columnMin, columnMax, columnDiff);
+        break;
+      default:
+        console.log("unknown Character");
+    }
+  });
+  if (rowMin != rowMax) console.log("Row error:", rowMin, rowMax, rowDiff);
+  if (columnMin != columnMax)
+    console.log("Column error:", columnMin, columnMax, columnDiff);
+  let seatId = rowMin * 8 + columnMin;
+  return { row: rowMin, column: columnMin, seatId: seatId };
+}
+
 function main(input) {
-  // console.log("input", input);
+  console.log("input", input);
   let startTime = getNanoSecTime();
 
-  input.forEach((item) => {});
+  let plane = {
+    rows: 128,
+    columns: 8,
+  };
+
+  let listOfIds = [];
+  input.forEach((seatCode) => {
+    let seat = findSeat(seatCode, plane);
+    listOfIds.push(seat.seatId);
+  });
+  listOfIds.sort((a, b) => {
+    if (a > b) return 1;
+    return -1;
+  });
+  let indexOfLast = listOfIds.length - 1;
+  let highestId = listOfIds[indexOfLast];
+  console.log(listOfIds);
+
+  let previousId = listOfIds[0] - 1;
+  let myId;
+  listOfIds.some((id) => {
+    if (id - 1 != previousId) myId = id - 1;
+    previousId = id;
+  });
 
   let endTime = getNanoSecTime();
   let timeElapsed = (endTime - startTime) * 0.000001;
   console.log("timeElapsed:", timeElapsed);
+
+  console.log("Highest Seat ID:", highestId);
+  console.log("My Seat ID:", myId);
 }
