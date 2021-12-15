@@ -22,5 +22,8 @@
   "bugs": {
     "url": "https://github.com/Dakine135/AdventOfCode2020/issues"
   },
-  "homepage": "https://github.com/Dakine135/AdventOfCode2020#readme"
+  "homepage": "https://github.com/Dakine135/AdventOfCode2020#readme",
+  "dependencies": {
+    "nodemon": "^2.0.15"
+  }
 }
