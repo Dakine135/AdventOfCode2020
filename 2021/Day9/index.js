@@ -117,17 +117,27 @@ function isLowPoint(input, rowIndex, columnIndex) {
     return self < Math.min(left, right, up, down);
 }
 
+function calculateBasinSize(input, rowIndex, columnIndex, found = []) {
+    let left = input?.[rowIndex]?.[columnIndex - 1] ?? 9;
+    let right = input?.[rowIndex]?.[columnIndex + 1] ?? 9;
+    let up = input?.[rowIndex - 1]?.[columnIndex] ?? 9;
+    let down = input?.[rowIndex + 1]?.[columnIndex] ?? 9;
+}
+
 function main(input) {
     // console.log("input", input);
     let startTime = Utilities.getNanoSecTime();
     let part1 = 0;
     let part2 = null;
 
-    let lowPoints = [];
+    let basins = [];
+    let doOnce = true;
     input.forEach((row, rowIndex) => {
         row.forEach((point, columnIndex) => {
             if (isLowPoint(input, rowIndex, columnIndex)) {
                 part1 += 1 + point;
+                if (doOnce) calculateBasinSize(input, rowIndex, columnIndex, [`${rowIndex},${columnIndex}`]);
+                doOnce = false;
             }
         });
         // if (DEBUG) console.log('=========================================');
