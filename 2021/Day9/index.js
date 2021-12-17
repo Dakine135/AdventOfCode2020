@@ -118,10 +118,17 @@ function isLowPoint(input, rowIndex, columnIndex) {
 }
 
 function calculateBasinSize(input, rowIndex, columnIndex, found = []) {
-    let left = input?.[rowIndex]?.[columnIndex - 1] ?? 9;
-    let right = input?.[rowIndex]?.[columnIndex + 1] ?? 9;
-    let up = input?.[rowIndex - 1]?.[columnIndex] ?? 9;
-    let down = input?.[rowIndex + 1]?.[columnIndex] ?? 9;
+    let selfValue = input?.[rowIndex]?.[columnIndex] ?? 9;
+    let selfLocation = `${rowIndex},${columnIndex}`;
+    if (selfValue < 9 && !found.includes(selfLocation)) {
+        found.push(selfLocation);
+        // console.log('found :>> ', found);
+        calculateBasinSize(input, rowIndex, columnIndex - 1, found);
+        calculateBasinSize(input, rowIndex, columnIndex + 1, found);
+        calculateBasinSize(input, rowIndex - 1, columnIndex, found);
+        calculateBasinSize(input, rowIndex + 1, columnIndex, found);
+    }
+    return found;
 }
 
 function main(input) {
@@ -131,25 +138,40 @@ function main(input) {
     let part2 = null;
 
     let basins = [];
-    let doOnce = true;
     input.forEach((row, rowIndex) => {
         row.forEach((point, columnIndex) => {
             if (isLowPoint(input, rowIndex, columnIndex)) {
                 part1 += 1 + point;
-                if (doOnce) calculateBasinSize(input, rowIndex, columnIndex, [`${rowIndex},${columnIndex}`]);
-                doOnce = false;
+                basins.push(calculateBasinSize(input, rowIndex, columnIndex).length);
             }
         });
         // if (DEBUG) console.log('=========================================');
         // if (DEBUG) console.log('=========================================');
     });
+    console.log('basins, basins.length :>> ', basins, basins.length);
+    let largest = Math.max(...basins);
+    let indexOfLargest = basins.indexOf(largest);
+    basins.splice(indexOfLargest, 1);
+    console.log('largest, basins.length :>> ', largest, basins.length);
+
+    let secondLargest = Math.max(...basins);
+    let indexOfSecondLargest = basins.indexOf(secondLargest);
+    basins.splice(indexOfSecondLargest, 1);
+    console.log('secondLargest, basins.length :>> ', secondLargest, basins.length);
+
+    let thirdLargest = Math.max(...basins);
+    let indexOfThirdLargest = basins.indexOf(thirdLargest);
+    basins.splice(indexOfThirdLargest, 1);
+    console.log('thirdLargest, basins.length :>> ', thirdLargest, basins.length);
+
+    part2 = largest * secondLargest * thirdLargest;
 
     let endTime = Utilities.getNanoSecTime();
     let timeElapsed = (endTime - startTime) * 0.000001;
     console.log('timeElapsed:', timeElapsed);
 
     console.log('Part 1:', part1); //439
-    console.log('Part 2:', part2);
+    console.log('Part 2:', part2); //1000000 too high,  900900 correct
 }
 
 setup();
