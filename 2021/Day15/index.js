@@ -93,6 +93,7 @@ class Map {
                 if (indexRow == 0 && indexColumn == 0) {
                     entry.totalRisk = 0;
                     entry.path = [entry];
+                    entry.needsFinalCheck = true;
                 } else {
                     entry.path = [];
                 }
@@ -117,27 +118,62 @@ class Map {
             this.updateEntryRisk(currentEntry);
             // this.log();
         }
+        console.log('iterationCount1 :>> ', iterationCount);
+        let endPosition = this.getEndPosition();
+        this.log(endPosition.path);
+
+        //do again 1 more time
+        iterationCount = 0;
+        this.toDo = [this.map[0][1], this.map[1][0]];
+        while (this.toDo.length > 0) {
+            iterationCount++;
+            if (iterationCount >= iterationLimit) {
+                console.log('Iteration Limit');
+                break;
+            }
+            currentEntry = this.toDo.pop();
+            this.updateEntryRisk(currentEntry, true);
+            // this.log();
+        }
+        console.log('iterationCount2 :>> ', iterationCount);
     }
 
     getNeighbors(entry) {
         let neighbors = [];
-        if (this.map[entry.x - 1]?.[entry.y] != null) neighbors.push(this.map[entry.x - 1][entry.y]);
-        if (this.map[entry.x + 1]?.[entry.y] != null) neighbors.push(this.map[entry.x + 1][entry.y]);
-        if (this.map[entry.x]?.[entry.y - 1] != null) neighbors.push(this.map[entry.x][entry.y - 1]);
-        if (this.map[entry.x]?.[entry.y + 1] != null) neighbors.push(this.map[entry.x][entry.y + 1]);
+        if (entry.x - 1 >= 0) neighbors.push(this.map[entry.x - 1][entry.y]);
+        if (entry.x + 1 < this.map.length) neighbors.push(this.map[entry.x + 1][entry.y]);
+        if (entry.y - 1 >= 0) neighbors.push(this.map[entry.x][entry.y - 1]);
+        if (entry.y + 1 < this.map[entry.x].length) neighbors.push(this.map[entry.x][entry.y + 1]);
         return neighbors;
     }
 
-    updateEntryRisk(entry) {
+    updateEntryRisk(entry, isFinalCheck = false) {
         let neighbors = this.getNeighbors(entry);
         let originalTotalRisk = entry.totalRisk;
         // console.log('neighbors :>> ', neighbors);
-        let leastRiskRouteToMe = Math.min(...neighbors.map((x) => x.totalRisk));
+        let leastRiskScore = Infinity;
+        let leastRiskEntry;
+        neighbors.forEach((neighbor) => {
+            if (neighbor.totalRisk < leastRiskScore) {
+                leastRiskScore = neighbor.totalRisk;
+                leastRiskEntry = neighbor;
+            }
+        });
+        // let leastRiskRouteToMe = Math.min(...neighbors.map((x) => x.totalRisk));
         // console.log('leastRiskRouteToMe :>> ', leastRiskRouteToMe);
-        let newTotalRisk = leastRiskRouteToMe + entry.risk;
-        if (newTotalRisk < originalTotalRisk) {
+        let newTotalRisk = leastRiskScore + entry.risk;
+        if (newTotalRisk < originalTotalRisk || (isFinalCheck && entry.needsFinalCheck)) {
+            if (isFinalCheck) entry.needsFinalCheck = false;
             entry.totalRisk = newTotalRisk;
+            entry.path = [...leastRiskEntry.path, entry];
             neighbors.forEach((neighbor) => {
+                neighbor.path.forEach((node) => {
+                    let isInToDo =
+                        this.toDo.filter((x) => {
+                            return x.x == node.x && x.y == node.y;
+                        }).length > 0;
+                    if (!isInToDo) this.toDo.unshift(node);
+                });
                 this.toDo.unshift(neighbor);
             });
         }
@@ -149,27 +185,38 @@ class Map {
         return lastRow[lastRow.length - 1];
     }
 
-    log() {
+    log(highlightPath) {
         this.map.forEach((row, index) => {
             // row.forEach((entry, indexColumn) => {
             // });
             let rowString = row.map((entry) => {
+                let isInPath = highlightPath
+                    ? highlightPath.filter((x) => {
+                          return x.x == entry.x && x.y == entry.y;
+                      }).length > 0
+                    : false;
                 switch (entry.totalRisk != null ? entry.totalRisk.toString().length : null) {
                     case 1:
-                        return `00${entry.totalRisk}`;
+                        return `${isInPath ? '[' : ' '}00${entry.totalRisk}${isInPath ? ']' : ' '}`;
                     case 2:
-                        return `0${entry.totalRisk}`;
+                        return `${isInPath ? '[' : ' '}0${entry.totalRisk}${isInPath ? ']' : ' '}`;
                     case 3:
-                        return `${entry.totalRisk}`;
+                        return `${isInPath ? '[' : ' '}${entry.totalRisk}${isInPath ? ']' : ' '}`;
                     case null:
-                        return `nul`;
+                        return `${isInPath ? '[' : ' '}nul${isInPath ? ']' : ' '}`;
                     case 8:
-                        return `Inf`;
+                        return `${isInPath ? '[' : ' '}Inf${isInPath ? ']' : ' '}`;
                     default:
-                        return `000`;
+                        return `${isInPath ? '[' : ' '}000${isInPath ? ']' : ' '}`;
                 }
             });
             console.log(rowString.join('-'));
+        });
+    }
+    logPath(entry) {
+        console.log(`[X, Y] => [Row, Column]`);
+        entry.path.forEach((node) => {
+            console.log(`[${node.x},${node.y}] Risk: ${node.risk} Total: ${node.totalRisk}`);
         });
     }
 }
@@ -211,6 +258,8 @@ function main(input) {
 1293138521
 2311944581`;
 
+    //TODO maybe try recursive from the end going backwards to beginning?
+
     // console.log('inputTestString :>> ', inputTestString);
     let testInput = parseFunction(inputTestString);
     // console.log('testInput :>> ', testInput);
@@ -218,8 +267,10 @@ function main(input) {
     testMap.log();
     testMap.calculateTotalRisk();
     console.log('AFTER calculateTotalRisk');
-    testMap.log();
-    let testResult = testMap.getEndPosition().totalRisk;
+    let endPosition = testMap.getEndPosition();
+    testMap.log(endPosition.path);
+    testMap.logPath(endPosition);
+    let testResult = endPosition.totalRisk;
     console.log('testResult :>> ', testResult);
 
     // let map = new Map(input);
