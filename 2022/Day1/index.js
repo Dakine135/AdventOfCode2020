@@ -1,40 +1,57 @@
 /*
---- Day 15: Chiton ---
+--- Day 1: Calorie Counting ---
 
-You've almost reached the exit of the cave, but the walls are getting closer together. Your submarine can barely still fit, though; the main problem is that the walls of the cave are covered in chitons, and it would be best not to bump any of them.
+Santa's reindeer typically eat regular reindeer food, but they need a lot of magical energy to deliver presents on Christmas. For that, their favorite snack is a special type of star fruit that only grows deep in the jungle. The Elves have brought you on their annual expedition to the grove where the fruit grows.
 
-The cavern is large, but has a very low ceiling, restricting your motion to two dimensions. The shape of the cavern resembles a square; a quick scan of chiton density produces a map of risk level throughout the cave (your puzzle input). For example:
+To supply enough magical energy, the expedition needs to retrieve a minimum of fifty stars by December 25th. Although the Elves assure you that the grove has plenty of fruit, you decide to grab any fruit you see along the way, just in case.
 
-1163751742
-1381373672
-2136511328
-3694931569
-7463417111
-1319128137
-1359912421
-3125421639
-1293138521
-2311944581
+Collect stars by solving puzzles. Two puzzles will be made available on each day in the Advent calendar; the second puzzle is unlocked when you complete the first. Each puzzle grants one star. Good luck!
 
-You start in the top left position, your destination is the bottom right position, and you cannot move diagonally. The number at each position is its risk level; to determine the total risk of an entire path, add up the risk levels of each position you enter (that is, don't count the risk level of your starting position unless you enter it; leaving it adds no risk to your total).
+The jungle must be too overgrown and difficult to navigate in vehicles or access from the air; the Elves' expedition traditionally goes on foot. As your boats approach land, the Elves begin taking inventory of their supplies. One important consideration is food - in particular, the number of Calories each Elf is carrying (your puzzle input).
 
-Your goal is to find a path with the lowest total risk. In this example, a path with the lowest total risk is highlighted here:
+The Elves take turns writing down the number of Calories contained by the various meals, snacks, rations, etc. that they've brought with them, one item per line. Each Elf separates their own inventory from the previous Elf's inventory (if any) by a blank line.
 
-1163751742
-1381373672
-2136511328
-3694931569
-7463417111
-1319128137
-1359912421
-3125421639
-1293138521
-2311944581
+For example, suppose the Elves finish writing their items' Calories and end up with the following list:
 
-The total risk of this path is 40 (the starting position is never entered, so its risk is not counted).
+1000
+2000
+3000
 
-What is the lowest total risk of any path from the top left to the bottom right?
+4000
 
+5000
+6000
+
+7000
+8000
+9000
+
+10000
+
+This list represents the Calories of the food carried by five Elves:
+
+    The first Elf is carrying food with 1000, 2000, and 3000 Calories, a total of 6000 Calories.
+    The second Elf is carrying one food item with 4000 Calories.
+    The third Elf is carrying food with 5000 and 6000 Calories, a total of 11000 Calories.
+    The fourth Elf is carrying food with 7000, 8000, and 9000 Calories, a total of 24000 Calories.
+    The fifth Elf is carrying one food item with 10000 Calories.
+
+In case the Elves get hungry and need extra snacks, they need to know which Elf to ask: they'd like to know how many Calories are being carried by the Elf carrying the most Calories. In the example above, this is 24000 (carried by the fourth Elf).
+
+Find the Elf carrying the most Calories. How many total Calories is that Elf carrying?
+
+our puzzle answer was 75501.
+
+The first half of this puzzle is complete! It provides one gold star: *
+--- Part Two ---
+
+By the time you calculate the answer to the Elves' question, they've already realized that the Elf carrying the most Calories of food might eventually run out of snacks.
+
+To avoid this unacceptable situation, the Elves would instead like to know the total Calories carried by the top three Elves carrying the most Calories. That way, even if one of those Elves runs out of snacks, they still have two backups.
+
+In the example above, the top three Elves are the fourth Elf (with 24000 Calories), then the third Elf (with 11000 Calories), then the fifth Elf (with 10000 Calories). The sum of the Calories carried by these three elves is 45000.
+
+Find the top three Elves carrying the most Calories. How many Calories are those Elves carrying in total?
 
 */
 
@@ -45,199 +62,33 @@ const DEBUG = true;
 
 async function setup() {
     const config = {
-        year: 2021,
-        day: 15
+        year: 2022,
+        day: 1
         // ignoreFile: true,
     };
     let rawInput = await Utilities.getInput(config);
-    // console.log("rawInput :>> ", rawInput);
+    // console.log('rawInput :>> ', rawInput);
 
     const parseConfig = {
         rawInput,
         // ignoreFile: true,
         parseFunction: (text) => {
             text = text.trim();
-            let output = text.split('\n');
+            let output = text.split('\n\n');
             output = output.map((x, indexRow) => {
-                let splitString = x.split('');
+                let splitString = x.split('\n');
                 return splitString.map((string, indexColumn) => {
-                    return {
-                        x: indexColumn,
-                        y: indexRow,
-                        risk: parseInt(string),
-                        totalRisk: null
-                    };
+                    return Number(string);
                 });
             });
-            console.log('output :>> ', output);
+            // console.log('output :>> ', output);
             return output;
         }
     };
     let input = await Utilities.parseInput(parseConfig);
-    // console.log("input :>> ", input);
+    // console.log('input :>> ', input);
 
     main(input);
-}
-
-class Map {
-    constructor(input) {
-        this.map = input;
-        this.toDo = [];
-        this.setup();
-    }
-
-    setup() {
-        this.map = this.map.map((row, indexRow) => {
-            return row.map((entry, indexColumn) => {
-                entry.totalRisk = Infinity;
-                if (indexRow == 0 && indexColumn == 0) {
-                    entry.totalRisk = 0;
-                    entry.path = [entry];
-                    entry.needsFinalCheck = true;
-                } else {
-                    entry.path = [];
-                }
-                return entry;
-            });
-        });
-        this.toDo.push(this.map[0][1], this.map[1][0]);
-    }
-
-    calculateTotalRisk() {
-        let iterationLimit = 10000000;
-        let iterationCount = 0;
-        // console.log('this.toDo :>> ', this.toDo);
-        let currentEntry;
-        while (this.toDo.length > 0) {
-            iterationCount++;
-            if (iterationCount >= iterationLimit) {
-                console.log('Iteration Limit');
-                break;
-            }
-            currentEntry = this.toDo.pop();
-            this.updateEntryRisk(currentEntry);
-            // this.log();
-        }
-        console.log('iterationCount1 :>> ', iterationCount);
-        let endPosition = this.getEndPosition();
-        this.log(endPosition.path);
-
-        //do again 1 more time
-        iterationCount = 0;
-        this.toDo = [this.map[0][1], this.map[1][0]];
-        while (this.toDo.length > 0) {
-            iterationCount++;
-            if (iterationCount >= iterationLimit) {
-                console.log('Iteration Limit');
-                break;
-            }
-            currentEntry = this.toDo.pop();
-            this.updateEntryRisk(currentEntry, true);
-            // this.log();
-        }
-        console.log('iterationCount2 :>> ', iterationCount);
-    }
-
-    getNeighbors(entry) {
-        let neighbors = [];
-        if (entry.x - 1 >= 0) neighbors.push(this.map[entry.x - 1][entry.y]);
-        if (entry.x + 1 < this.map.length) neighbors.push(this.map[entry.x + 1][entry.y]);
-        if (entry.y - 1 >= 0) neighbors.push(this.map[entry.x][entry.y - 1]);
-        if (entry.y + 1 < this.map[entry.x].length) neighbors.push(this.map[entry.x][entry.y + 1]);
-        return neighbors;
-    }
-
-    updateEntryRisk(entry, isFinalCheck = false) {
-        let neighbors = this.getNeighbors(entry);
-        let originalTotalRisk = entry.totalRisk;
-        // console.log('neighbors :>> ', neighbors);
-        let leastRiskScore = Infinity;
-        let leastRiskEntry;
-        neighbors.forEach((neighbor) => {
-            if (neighbor.totalRisk < leastRiskScore) {
-                leastRiskScore = neighbor.totalRisk;
-                leastRiskEntry = neighbor;
-            }
-        });
-        // let leastRiskRouteToMe = Math.min(...neighbors.map((x) => x.totalRisk));
-        // console.log('leastRiskRouteToMe :>> ', leastRiskRouteToMe);
-        let newTotalRisk = leastRiskScore + entry.risk;
-        if (newTotalRisk < originalTotalRisk || (isFinalCheck && entry.needsFinalCheck)) {
-            if (isFinalCheck) entry.needsFinalCheck = false;
-            entry.totalRisk = newTotalRisk;
-            entry.path = [...leastRiskEntry.path, entry];
-            neighbors.forEach((neighbor) => {
-                neighbor.path.forEach((node) => {
-                    let isInToDo =
-                        this.toDo.filter((x) => {
-                            return x.x == node.x && x.y == node.y;
-                        }).length > 0;
-                    if (!isInToDo) this.toDo.unshift(node);
-                });
-                this.toDo.unshift(neighbor);
-            });
-        }
-        // console.log('entry :>> ', entry);
-    }
-
-    getEndPosition() {
-        let lastRow = this.map[this.map.length - 1];
-        return lastRow[lastRow.length - 1];
-    }
-
-    log(highlightPath) {
-        this.map.forEach((row, index) => {
-            // row.forEach((entry, indexColumn) => {
-            // });
-            let rowString = row.map((entry) => {
-                let isInPath = highlightPath
-                    ? highlightPath.filter((x) => {
-                          return x.x == entry.x && x.y == entry.y;
-                      }).length > 0
-                    : false;
-                switch (entry.totalRisk != null ? entry.totalRisk.toString().length : null) {
-                    case 1:
-                        return `${isInPath ? '[' : ' '}00${entry.totalRisk}${isInPath ? ']' : ' '}`;
-                    case 2:
-                        return `${isInPath ? '[' : ' '}0${entry.totalRisk}${isInPath ? ']' : ' '}`;
-                    case 3:
-                        return `${isInPath ? '[' : ' '}${entry.totalRisk}${isInPath ? ']' : ' '}`;
-                    case null:
-                        return `${isInPath ? '[' : ' '}nul${isInPath ? ']' : ' '}`;
-                    case 8:
-                        return `${isInPath ? '[' : ' '}Inf${isInPath ? ']' : ' '}`;
-                    default:
-                        return `${isInPath ? '[' : ' '}000${isInPath ? ']' : ' '}`;
-                }
-            });
-            console.log(rowString.join('-'));
-        });
-    }
-    logPath(entry) {
-        console.log(`[X, Y] => [Row, Column]`);
-        entry.path.forEach((node) => {
-            console.log(`[${node.x},${node.y}] Risk: ${node.risk} Total: ${node.totalRisk}`);
-        });
-    }
-}
-
-function parseFunction(text) {
-    text = text.trim();
-    let output = text.split('\n');
-    output = output.map((x, indexRow) => {
-        let splitString = x.split('');
-        // console.log('splitString :>> ', splitString);
-        return splitString.map((string, indexColumn) => {
-            return {
-                x: indexColumn,
-                y: indexRow,
-                risk: parseInt(string),
-                totalRisk: null
-            };
-        });
-    });
-    // console.log('output :>> ', output);
-    return output;
 }
 
 function main(input) {
@@ -246,44 +97,31 @@ function main(input) {
     let part1 = null;
     let part2 = null;
 
+    let elves = input.map((elf, index) => {
+        const total = elf.reduce((a, b) => a + b, 0);
+        return { total, inventory: elf, name: `Elf ${index}` };
+    });
+
+    elves = elves.sort((elfA, elfB) => elfB.total - elfA.total);
+
+    part1 = elves[0].total;
+    part2 = elves[0].total + elves[1].total + elves[2].total;
+
     //test input
-    let inputTestString = `1163751742
-1381373672
-2136511328
-3694931569
-7463417111
-1319128137
-1359912421
-3125421639
-1293138521
-2311944581`;
-
-    //TODO maybe try recursive from the end going backwards to beginning?
-
-    // console.log('inputTestString :>> ', inputTestString);
-    let testInput = parseFunction(inputTestString);
-    // console.log('testInput :>> ', testInput);
-    let testMap = new Map(testInput);
-    testMap.log();
-    testMap.calculateTotalRisk();
-    console.log('AFTER calculateTotalRisk');
-    let endPosition = testMap.getEndPosition();
-    testMap.log(endPosition.path);
-    testMap.logPath(endPosition);
-    let testResult = endPosition.totalRisk;
-    console.log('testResult :>> ', testResult);
-
-    // let map = new Map(input);
-    // map.log();
-    // map.calculateTotalRisk();
-    // console.log('AFTER calculateTotalRisk');
-    // map.log();
-    // part1 = map.getEndPosition().totalRisk;
-    // input.forEach((row, indexRow) => {
-    //     row.forEach((entry, indexColumn) => {
-    //         console.log('entry, indexRow, indexColumn :>> ', entry, indexRow, indexColumn);
-    //     });
-    // });
+    let inputTestString = `1000
+    2000
+    3000
+    
+    4000
+    
+    5000
+    6000
+    
+    7000
+    8000
+    9000
+    
+    10000`;
 
     let endTime = Utilities.getNanoSecTime();
     let timeElapsed = (endTime - startTime) * 0.000001;
