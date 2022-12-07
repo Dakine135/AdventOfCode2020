@@ -90,7 +90,7 @@ module.exports = {
             if (ignoreFile || !fs.existsSync(inputFilePath)) {
                 console.log('creating new Parse File');
                 input = parseFunction(rawInput);
-                let dataToWrite = JSON.stringify(input);
+                let dataToWrite = JSON.stringify(input, null, 1);
                 fs.writeFileSync(inputFilePath, dataToWrite);
                 resolve(input);
             } else {
