@@ -104,5 +104,8 @@ module.exports = {
     getNanoSecTime() {
         var hrTime = process.hrtime();
         return hrTime[0] * 1000000000 + hrTime[1];
+    },
+    binarySearch(array, searchValue, lowIndex = 0, highIndex = array.length - 1) {
+        console.log('array,searchValue,lowIndex,highIndex :>> ', array, searchValue, lowIndex, highIndex);
     }
 };
