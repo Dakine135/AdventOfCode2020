@@ -56,6 +56,59 @@ The Elves just need to know which crate will end up on top of each stack; in thi
 
 After the rearrangement procedure completes, what crate ends up on top of each stack?
 
+Your puzzle answer was LJSVLTWQM.
+
+The first half of this puzzle is complete! It provides one gold star: *
+--- Part Two ---
+
+As you watch the crane operator expertly rearrange the crates, you notice the process isn't following your prediction.
+
+Some mud was covering the writing on the side of the crane, and you quickly wipe it away. The crane isn't a CrateMover 9000 - it's a CrateMover 9001.
+
+The CrateMover 9001 is notable for many new and exciting features: air conditioning, leather seats, an extra cup holder, and the ability to pick up and move multiple crates at once.
+
+Again considering the example above, the crates begin in the same configuration:
+
+    [D]    
+[N] [C]    
+[Z] [M] [P]
+ 1   2   3 
+
+Moving a single crate from stack 2 to stack 1 behaves the same as before:
+
+[D]        
+[N] [C]    
+[Z] [M] [P]
+ 1   2   3 
+
+However, the action of moving three crates from stack 1 to stack 3 means that those three moved crates stay in the same order, resulting in this new configuration:
+
+        [D]
+        [N]
+    [C] [Z]
+    [M] [P]
+ 1   2   3
+
+Next, as both crates are moved from stack 2 to stack 1, they retain their order as well:
+
+        [D]
+        [N]
+[C]     [Z]
+[M]     [P]
+ 1   2   3
+
+Finally, a single crate is still moved from stack 1 to stack 2, but now it's crate C that gets moved:
+
+        [D]
+        [N]
+        [Z]
+[M] [C] [P]
+ 1   2   3
+
+In this example, the CrateMover 9001 has put the crates in a totally different order: MCD.
+
+Before the rearrangement process finishes, update your simulation so that the Elves know where they should stand to be ready to unload the final supplies. After the rearrangement procedure completes, what crate ends up on top of each stack?
+
 
 
 */
@@ -82,11 +135,16 @@ async function setup() {
         parseFunction: (text) => {
             text = text.trim();
             let output = text.split('\n\n');
+            // console.log('output[0] :>> ', output[0]);
             let tokenized = output[0].split('\n').map((row) => {
+                row = row + ' ';
                 return row.match(/.{4}/g).map((x) => x.replaceAll(/[\[\] ]/g, ''));
             });
+            // console.log('tokenized :>> ', tokenized);
             let stackNames = tokenized[tokenized.length - 1];
+            // console.log('stackNames :>> ', stackNames);
             let stacks = Object.fromEntries(stackNames.map((x) => [x, []]));
+            // console.log('stacks :>> ', stacks);
             for (let i = tokenized.length - 2; i >= 0; i--) {
                 let tokenRow = tokenized[i];
                 tokenRow.forEach((crate, index) => {
@@ -112,23 +170,46 @@ async function setup() {
     main(input);
 }
 
-function main(input) {
-    console.log('input', input);
+function main({ stacks, moves }) {
+    // console.log('stacks, moves', stacks, moves);
     let startTime = Utilities.getNanoSecTime();
     let part1 = null;
     let part2 = null;
 
-    input.forEach((entry) => {
-        // if (DEBUG) console.log('=========================================');
-        // if (DEBUG) console.log('=========================================');
+    const stacksPart2 = JSON.parse(JSON.stringify(stacks));
+
+    moves.forEach(({ from, to, count }) => {
+        // console.log('from, to, count :>> ', from, to, count);
+        while (count > 0) {
+            stacks[to].push(stacks[from].pop());
+            count--;
+        }
     });
+
+    moves.forEach(({ from, to, count }, index) => {
+        // console.log(index, 'BEFORE stacksPart2[from], stacksPart2[to] :>> ', stacksPart2[from], stacksPart2[to]);
+        // console.log(index, 'from, to, count :>> ', from, to, count);
+        let splice = stacksPart2[from].splice(-count, count);
+        // console.log(index, 'splice :>> ', splice);
+        stacksPart2[to] = [...stacksPart2[to], ...splice];
+        // console.log(index, 'AFTER stacksPart2[from], stacksPart2[to] :>> ', stacksPart2[from], stacksPart2[to]);
+    });
+
+    // console.log('stacks :>> ', stacks);
+    part1 = Object.values(stacks)
+        .map((x) => x[x.length - 1])
+        .join('');
+
+    part2 = Object.values(stacksPart2)
+        .map((x) => x[x.length - 1])
+        .join('');
 
     let endTime = Utilities.getNanoSecTime();
     let timeElapsed = (endTime - startTime) * 0.000001;
     console.log('timeElapsed:', timeElapsed);
 
-    console.log('Part 1:', part1);
-    console.log('Part 2:', part2);
+    console.log('Part 1:', part1); //LJSVLTWQM
+    console.log('Part 2:', part2); //NOT RRMSGTTBP   NOT LPHBPSBGJ
 }
 
 setup();
