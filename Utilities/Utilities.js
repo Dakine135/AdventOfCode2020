@@ -29,8 +29,7 @@ module.exports = {
         day,
         inputFilePath = './input.txt',
         ignoreFile = false,
-        // sessionCookie = 'session=53616c7465645f5f150b0973d7821f4ad7c1f3171c32e498240925d23e6d8e40b19e8caa399e7d72d1ae20668b969223' 2022
-        sessionCookie = 'session=53616c7465645f5fe0711f99e93b2191253bb7443daf7a4e6332415b51f950e64dec5ec58308456e46d00e9edf811b8d32e3e89e031103c28c8f169c10f5db23'
+        sessionCookie = 'session=53616c7465645f5ff545fe7bfdc02140dd13c3ce3568e5b22a75f9bf50f8a2f65ecd7eb1fd30a59c70e3be2b58167df2eb5caee0f07ef45e094ca6c6093dd2cb'
     } = {}) {
         if (year == null || day == null) throw Error('year and day required input for getInput');
         const thisPuzzleUrlInput = `/${year}/day/${day}/input`;
