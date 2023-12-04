@@ -11,8 +11,8 @@ const DEBUG = true;
 
 async function setup() {
     const config = {
-        year: null,
-        day: null
+        year: 2023,
+        day: 4
         // ignoreFile: true,
     };
     let rawInput = await Utilities.getInput(config);
